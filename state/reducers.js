@@ -1,5 +1,7 @@
-import { actionTypes } from './actions.js';
 import { List, Map } from 'immutable';
+import { combineReducers } from 'redux';
+
+import { actionTypes } from './actions.js';
 
 const oscillators = (state = List(), action) => {
   switch (action.type) {
@@ -19,8 +21,14 @@ const oscillators = (state = List(), action) => {
           x: action.x,
           y: action.y,
         })
-      )
+      );
     default:
       return state;
   }
 }
+
+const webJam = combineReducers({
+  oscillators,
+});
+
+export default webJam;
