@@ -9,8 +9,13 @@ export default class Background extends Component {
         y={0}
         width={this.props.width}
         height={this.props.height}
+        onClick={this.props.onClick}
         fill="white"
       />
     );
   }
+}
+
+Background.PropTypes = {
+  onClick: PropTypes.func.isRequired,
 }

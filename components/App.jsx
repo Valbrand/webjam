@@ -9,42 +9,78 @@ export default class App extends Component {
     super(...args);
 
     this.state = {
-      rectangles: []
+      oscillators: [],
     };
 
     this.stage = null;
+    this.audioContext = this.createAudioContext();
 
-    this.showPos = this.showPos.bind(this);
+    this.createOscillator = this.createOscillator.bind(this);
   }
 
   componentDidMount() {
     this.stage = this.refs.stage.getStage();
   }
 
-  showPos(event) {
+  createAudioContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    return AudioContext ? (new AudioContext()) : null;
+  }
+
+  createOscillator(event) {
     const { x, y } = this.stage.getPointerPosition();
 
     this.setState({
-      rectangles: [...this.state.rectangles, { x, y }]
+      oscillators: [...this.state.oscillators, { x, y }]
     });
+  }
+
+  moveOscillatorNode(index) {
+    return (evt) => {
+      const { x, y } = evt.target.attrs;
+
+      this.setState({
+        oscillators: this.state.oscillators.map((oscillator, oscIndex) => {
+          if (index === oscIndex) {
+            oscillator.x = x;
+            oscillator.y = y;
+          }
+
+          return oscillator;
+        }),
+      });
+    }
+  }
+
+  removeOscillatorNode(index) {
+    return () => {
+      this.setState({
+        oscillators: this.state.oscillators.filter((oscillator, oscIndex) => oscIndex !== index),
+      });
+    }
   }
 
   render() {
     return (
-      <Stage ref="stage" width={this.props.width} height={this.props.height}>
-        <Layer onClick={this.showPos}>
-          <Background width={this.props.width} height={this.props.height} />
-          {this.state.rectangles.map((rectCenter, index) => {
-            return (
+      <div>
+        <Stage ref="stage" width={this.props.width} height={this.props.height}>
+          <Layer>
+            <Background width={this.props.width} height={this.props.height} onClick={this.createOscillator}/>
+            {this.state.oscillators.map((oscillator, index) =>
               <OscillatorNode
                 key={index}
-                centerX={rectCenter.x}
-                centerY={rectCenter.y}
-              />
-            );
-          })}
-        </Layer>
-      </Stage>
+                centerX={oscillator.x}
+                centerY={oscillator.y}
+                canvasWidth={this.props.width}
+                canvasHeigth={this.props.height}
+                audioContext={this.audioContext}
+                onDragMove={this.moveOscillatorNode(index)}
+                removalCallback={this.removeOscillatorNode(index)}
+              />)}
+          </Layer>
+        </Stage>
+      </div>
     );
   }
 }
