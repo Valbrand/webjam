@@ -62,6 +62,7 @@ export default class App extends Component {
   }
 
   render() {
+    console.log(`oscillators: ${this.state.oscillators.length}`);
     return (
       <div>
         <Stage ref="stage" width={this.props.width} height={this.props.height}>
@@ -73,9 +74,9 @@ export default class App extends Component {
                 centerX={oscillator.x}
                 centerY={oscillator.y}
                 canvasWidth={this.props.width}
-                canvasHeigth={this.props.height}
+                canvasHeight={this.props.height}
                 audioContext={this.audioContext}
-                onDragMove={this.moveOscillatorNode(index)}
+                onDragEnd={this.moveOscillatorNode(index)}
                 removalCallback={this.removeOscillatorNode(index)}
               />)}
           </Layer>
