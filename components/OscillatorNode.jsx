@@ -1,5 +1,12 @@
 import React, { Component, PropTypes } from 'react';
-import { Circle } from 'react-konva';
+import { Circle, RegularPolygon } from 'react-konva';
+
+const waveTypes = ['sine', 'square', 'triangle']
+const waveTypeValues = {};
+
+waveTypes.forEach((waveType, index) => {
+  waveTypeValues[waveType] = index;
+});
 
 export default class OscillatorNode extends React.Component {
   constructor(...args) {
@@ -7,28 +14,34 @@ export default class OscillatorNode extends React.Component {
 
     this.state = {
       color: Konva.Util.getRandomColor(),
-      type: 'sine',
+      type: 0,
     };
 
     this.oscillator = null;
     this.gainNode = null;
 
     this.handleClick = this.handleClick.bind(this);
+    this.setupAudioNodes = this.setupAudioNodes.bind(this);
   }
 
-  getGainFromPosition() {
-    return this.props.centerY / this.props.canvasHeigth;
+  getGainFromPosition(y) {
+    return y / this.props.canvasHeight;
   }
 
-  getFrequencyFromPosition() {
-    return 200 + ((this.props.centerX / this.props.canvasWidth) * 1800);
+  getFrequencyFromPosition(x) {
+    return 200 + ((x / this.props.canvasWidth) * 1800);
   }
 
   setupAudioNodes() {
-    this.oscillator.type = this.state.type;
-    this.oscillator.frequency.value = this.getFrequencyFromPosition();
+    const { x, y } = this.refs.component.attrs;
 
-    this.gainNode.gain.value = this.getGainFromPosition();
+    this.oscillator.type = waveTypes[this.state.type];
+
+    console.log(`oscillator type: ${this.oscillator.type}`);
+
+    this.oscillator.frequency.value = this.getFrequencyFromPosition(x);
+
+    this.gainNode.gain.value = this.getGainFromPosition(y);
   }
 
   componentDidMount() {
@@ -59,28 +72,59 @@ export default class OscillatorNode extends React.Component {
       this.props.removalCallback();
     } else {
       this.setState({
-        color: Konva.Util.getRandomColor()
+        color: Konva.Util.getRandomColor(),
+        type: (this.state.type + 1) % 3,
       });
+
+      this.setupAudioNodes();
+    }
+  }
+
+  getVisualElement(renderOptions) {
+    switch (this.state.type) {
+      case waveTypeValues.sine:
+        return (
+          <Circle
+            {...renderOptions}
+            ref="component"
+          />
+        );
+      case waveTypeValues.square:
+        return (
+          <RegularPolygon
+            {...renderOptions}
+            ref="component"
+            sides={4}
+            rotation={45}
+          />
+        );
+      case waveTypeValues.triangle:
+        return (
+          <RegularPolygon
+            {...renderOptions}
+            ref="component"
+            sides={3}
+            rotation={0}
+          />
+        );
     }
   }
 
   render() {
-    const width = 50;
-    const height = 50;
+    const renderOptions = {
+      x: this.props.centerX,
+      y: this.props.centerY,
+      radius: 30,
+      fill: this.state.color,
+      draggable: true,
+      shadowBlur: 5,
+      onClick: this.handleClick,
+      onDblClick: this.props.removalCallback,
+      onDragMove: this.setupAudioNodes,
+      onDragEnd: this.props.onDragEnd,
+    };
 
-    return (
-      <Circle
-        x={this.props.centerX}
-        y={this.props.centerY}
-        width={width}
-        height={height}
-        fill={this.state.color}
-        draggable={true}
-        shadowBlur={5}
-        onClick={this.handleClick}
-        onDragMove={this.props.onDragMove}
-      />
-    );
+    return this.getVisualElement(renderOptions);
   }
 }
 
@@ -88,8 +132,8 @@ OscillatorNode.propTypes = {
   centerX: PropTypes.number.isRequired,
   centerY: PropTypes.number.isRequired,
   canvasWidth: PropTypes.number.isRequired,
-  canvasHeigth: PropTypes.number.isRequired,
+  canvasHeight: PropTypes.number.isRequired,
   audioContext: PropTypes.object.isRequired,
-  onDragMove: PropTypes.func.isRequired,
+  onDragEnd: PropTypes.func.isRequired,
   removalCallback: PropTypes.func.isRequired,
 };
