@@ -26,7 +26,8 @@ header h1 {
 }
 
 .main-header {
-  font-size: 8rem;
+  font-size: 15rem;
+  text-transform: uppercase;
 }
 
 .header-content {
